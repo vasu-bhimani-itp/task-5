@@ -44,13 +44,14 @@ jobs:
 
       - name: Terraform Format Check
         run: |
-          echo "Checking Terraform formatting....."
-          
-          UNFORMATTED=$(terraform fmt -check -recursive -diff)
-          
-          if [ -n "$UNFORMATTED" ]; then
+          echo "Checking Terraform formatting..."
+
+          # Capture output WITHOUT failing immediately
+          OUTPUT=$(terraform fmt -check -recursive -diff || true)
+
+          if [ -n "$OUTPUT" ]; then
             echo "The following Terraform files are not properly formatted:"
-            terraform fmt -check -recursive
+            echo "$OUTPUT"
             echo ""
             echo "Run this command locally to fix:"
             echo "terraform fmt -recursive"

@@ -8,11 +8,11 @@ terraform {
 }
 
 provider "aws" {
-    region = var.aws_region
+  region = var.aws_region
   default_tags {
     tags = {
-      Owner = var.Owner
-      Name  = var.Name
+      Owner   = var.Owner
+      Name    = var.Name
       Project = var.Project
     }
   }
@@ -24,6 +24,6 @@ terraform {
     key            = "vpc/terraform.tfstate"
     region         = "us-east-1"
     dynamodb_table = "vasu-dynamodb-task-5"
-    encrypt = true
+    encrypt        = true
   }
 }

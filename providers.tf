@@ -24,7 +24,7 @@ terraform {
     bucket         = "vasu-task-5-tfstate"
     key            = "vpc/terraform.tfstate"
     region         = "us-east-1"
-    dynamodb_table = "vasu-dynamodb-task-5"
+    use_lockfile = true
     encrypt        = true
   }
 }

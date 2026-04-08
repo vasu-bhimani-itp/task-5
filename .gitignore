@@ -1,0 +1,13 @@
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+*.tfvars
+*.tfvars.json
+plan_output.txt
+*.tfplan
+crash.log
+plan_output.txt
+note.txt
+terraform.tfstate.d
+lambda_function.py

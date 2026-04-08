@@ -20,8 +20,71 @@ jobs:
     name: Terraform Plan
     runs-on: ubuntu-latest
 
-    outputs:
-      plan-file: tfplan
+    steps:
+      - name: Clone Repository
+        run: |
+          git clone https://github.com/${{ github.repository }} repo
+          cd repo
+          git checkout ${{ github.ref_name }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init -input=false
+        working-directory: repo
+
+      - name: Terraform Format Check
+        working-directory: repo
+        run: |
+          OUTPUT=$(terraform fmt -check -recursive -diff || true)
+
+          if [ -n "$OUTPUT" ]; then
+            echo " Formatting issues:"
+            echo "$OUTPUT"
+            exit 1
+          else
+            echo "Formatting correct"
+          fi
+
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: repo
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan -input=false
+        working-directory: repo
+
+      - name: Verify tfplan
+        working-directory: repo
+        run: |
+          ls -la
+          test -f tfplan || (echo " tfplan missing" && exit 1)
+
+      - name: Upload Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: repo/tfplan
+
+      - name: Upload Plan to S3
+        working-directory: repo
+        run: |
+          aws s3 cp tfplan s3://$TF_STATE_BUCKET/$PLAN_S3_PREFIX/tfplan-${{ github.sha }}
+
+  terraform-apply:
+    name: Terraform Apply (Manual Approval)
+    needs: terraform-plan
+    runs-on: ubuntu-latest
+
+    environment:
+      name: production
 
     steps:
       - name: Clone Repository
@@ -40,84 +103,19 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -input=false
         working-directory: repo
-
-      - name: Terraform Format Check
-        run: |
-          echo "Checking Terraform formatting..."
-
-          # Capture output WITHOUT failing immediately
-          OUTPUT=$(terraform fmt -check -recursive -diff || true)
-
-          if [ -n "$OUTPUT" ]; then
-            echo "The following Terraform files are not properly formatted:"
-            echo "$OUTPUT"
-            echo ""
-            echo "Run this command locally to fix:"
-            echo "terraform fmt -recursive"
-            exit 1
-          else
-            echo "Terraform formatting is correct"
-          fi
-
-      - name: Terraform Validate
-        run: terraform validate
-        working-directory: repo
-
-      - name: Terraform Plan
-        run: terraform plan -out=tfplan
-        working-directory: repo
-
-      - name: Debug Plan Output
-        working-directory: repo
-        run: |
-          echo "Files after plan:"
-          ls -la
-
-      - name: Upload Plan Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: terraform-plan
-          path: repo/tfplan
-
-      - name: Upload Plan to S3
-        run: |
-          echo "s3://$TF_STATE_BUCKET/$PLAN_S3_PREFIX/tfplan-${{ github.sha }}"
-          aws s3 cp tfplan s3://$TF_STATE_BUCKET/$PLAN_S3_PREFIX/tfplan-${{ github.sha }}
-          working-directory: repo
-
-  terraform-apply:
-    name: Terraform Apply (Manual Approval)
-    needs: terraform-plan
-    runs-on: ubuntu-latest
-
-    environment:
-      name: production
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform Init
-        run: terraform init
 
       - name: Download Plan Artifact
         uses: actions/download-artifact@v4
         with:
           name: terraform-plan
+          path: repo
 
       - name: Verify Plan
+        working-directory: repo
         run: ls -l tfplan
 
       - name: Terraform Apply
-        run: terraform apply tfplan
+        run: terraform apply tfplan -input=false
+        working-directory: repo

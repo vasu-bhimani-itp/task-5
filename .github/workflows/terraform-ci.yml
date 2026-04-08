@@ -68,6 +68,12 @@ jobs:
       - name: Terraform Plan
         run: terraform plan -out=tfplan
         working-directory: repo
+        
+      - name: Debug Plan Output
+        working-directory: repo
+        run: |
+          echo "Files after plan:"
+          ls -la
 
       - name: Upload Plan Artifact
         uses: actions/upload-artifact@v4

@@ -21,10 +21,10 @@ provider "aws" {
 
 terraform {
   backend "s3" {
-    bucket         = "vasu-task-5-tfstate"
-    key            = "vpc/terraform.tfstate"
-    region         = "us-east-1"
+    bucket       = "vasu-task-5-tfstate"
+    key          = "vpc/terraform.tfstate"
+    region       = "us-east-1"
     use_lockfile = true
-    encrypt        = true
+    encrypt      = true
   }
 }

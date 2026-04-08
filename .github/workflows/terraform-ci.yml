@@ -68,7 +68,7 @@ jobs:
       - name: Terraform Plan
         run: terraform plan -out=tfplan
         working-directory: repo
-        
+
       - name: Debug Plan Output
         working-directory: repo
         run: |
@@ -79,7 +79,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: terraform-plan
-          path: tfplan
+          path: repo/tfplan
 
       - name: Upload Plan to S3
         run: |

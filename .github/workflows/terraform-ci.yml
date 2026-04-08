@@ -79,6 +79,7 @@ jobs:
         run: |
           echo "s3://$TF_STATE_BUCKET/$PLAN_S3_PREFIX/tfplan-${{ github.sha }}"
           aws s3 cp tfplan s3://$TF_STATE_BUCKET/$PLAN_S3_PREFIX/tfplan-${{ github.sha }}
+          working-directory: repo
 
   terraform-apply:
     name: Terraform Apply (Manual Approval)

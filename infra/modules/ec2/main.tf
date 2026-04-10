@@ -29,6 +29,9 @@ resource "aws_instance" "example" {
   }))
 
   volume_tags = local.tag
+  tags = {
+    uid = "vasubhimani"   
+  }
 }
 
 resource "aws_security_group" "allow_tls" {

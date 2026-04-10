@@ -20,7 +20,8 @@ resource "aws_instance" "example" {
   associate_public_ip_address = true
   key_name                    = var.key_pair
   vpc_security_group_ids = [aws_security_group.allow_tls.id]
-
+  iam_instance_profile = var.iam_instance_profile_name
+  
   user_data_base64 = base64encode(templatefile("${path.module}/user_data.sh.tpl", {
     aws_region = var.aws_region
     account_id = local.account_id

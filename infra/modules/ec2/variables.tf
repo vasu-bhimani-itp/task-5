@@ -43,3 +43,6 @@ variable "repo_name" {
   default = "vasu/task-6"
 }
 
+variable "iam_instance_profile_name" {
+  
+}

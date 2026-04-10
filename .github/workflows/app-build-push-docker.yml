@@ -55,6 +55,8 @@ jobs:
 
       - name: Deploy on EC2 via SSM (using tag)
         run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
           INSTANCE_IDS=$(aws ec2 describe-instances \
             --filters "Name=tag:Name,Values=app-instance" "Name=instance-state-name,Values=running" \
             --query "Reservations[].Instances[].InstanceId" \
@@ -66,9 +68,9 @@ jobs:
             --instance-ids $INSTANCE_IDS \
             --document-name "AWS-RunShellScript" \
             --comment "Deploy latest container" \
-            --parameters commands='[
-              "aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin <ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com",
-              "docker pull <ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com/my-app:latest",
-              "docker rm -f my-app || true",
-              "docker run -d -p 80:5000 --name my-app <ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com/my-app:latest"
-            ]'
+            --parameters commands="[
+              \"aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com\",
+              \"docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG\",
+              \"docker rm -f my-app || true\",
+              \"docker run -d -p 80:5000 --name my-app $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG\"
+            ]"

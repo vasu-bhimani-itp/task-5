@@ -46,6 +46,7 @@ def index():
         return f"Error: {str(e)}", 500
 
 
+
 def get_local_ip():
     try:
         return socket.gethostbyname(socket.gethostname())

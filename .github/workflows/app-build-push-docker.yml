@@ -55,7 +55,7 @@ jobs:
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
           INSTANCE_IDS=$(aws ec2 describe-instances \
-            --filters "Name=tag:Name,Values=app-instance" "Name=instance-state-name,Values=running" \
+            --filters "Name=tag:uid,Values=vasubhimani" "Name=instance-state-name,Values=running" \
             --query "Reservations[].Instances[].InstanceId" \
             --output text)
 

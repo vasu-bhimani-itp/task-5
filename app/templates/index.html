@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ECS Test App</title>
+    <style>
+        body { font-family: Arial; margin: 20px; background: #f4f4f4; }
+        .card { background: white; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
+        h2 { color: #333; }
+        pre { background: #eee; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+
+<h1>🚀 ECS Fargate Test Dashboard</h1>
+
+<div class="card">
+    <h2>🌐 Network Info</h2>
+    <p><b>Hostname:</b> {{ data.hostname }}</p>
+    <p><b>Local IP:</b> {{ data.local_ip }}</p>
+    <p><b>Public IP:</b> {{ data.public_ip }}</p>
+</div>
+
+<div class="card">
+    <h2>🧪 Network Diagnostics</h2>
+    <pre>{{ data.network }}</pre>
+</div>
+
+<div class="card">
+    <h2>☁️ ECS Metadata</h2>
+    <pre>{{ data.metadata }}</pre>
+</div>
+
+<div class="card">
+    <h2>🔐 Environment Variables</h2>
+    <pre>{{ data.env_vars }}</pre>
+</div>
+
+<div class="card">
+    <h2>📜 Logs (Last 10 Requests)</h2>
+    <pre>{{ data.logs }}</pre>
+</div>
+
+</body>
+</html>

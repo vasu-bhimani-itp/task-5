@@ -1,0 +1,74 @@
+name: App CI (Build & Push to ECR)
+
+on:
+  push:
+    branches:
+      - task-6
+    paths:
+      - 'app/**'
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{vars.AWS_REGION}}
+  ECR_REPOSITORY: ${{vars.ECR_REPOSITORY}}
+  AWS_ROLE_ARN: ${{vars.AWS_ROLE_ARN}}
+  
+  
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{env.AWS_ROLE_ARN}}:role/github-oidc-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image tag
+        run: echo "IMAGE_TAG=${GITHUB_SHA}" >> $GITHUB_ENV
+
+      - name: Build Docker image
+        run: |
+          docker build -t $ECR_REPOSITORY:${IMAGE_TAG} ./app
+
+      - name: Tag image
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          docker tag $ECR_REPOSITORY:${IMAGE_TAG} \
+          $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${IMAGE_TAG}
+
+      - name: Push image to ECR
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          docker push \
+          $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${IMAGE_TAG}
+
+      - name: Deploy on EC2 via SSM (using tag)
+        run: |
+          INSTANCE_IDS=$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=app-instance" "Name=instance-state-name,Values=running" \
+            --query "Reservations[].Instances[].InstanceId" \
+            --output text)
+
+          echo "Found instances: $INSTANCE_IDS"
+
+          aws ssm send-command \
+            --instance-ids $INSTANCE_IDS \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy latest container" \
+            --parameters commands='[
+              "aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin <ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com",
+              "docker pull <ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com/my-app:latest",
+              "docker rm -f my-app || true",
+              "docker run -d -p 80:5000 --name my-app <ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com/my-app:latest"
+            ]'

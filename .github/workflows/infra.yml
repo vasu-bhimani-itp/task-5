@@ -7,16 +7,29 @@ on:
     paths:
       - 'infra/**'
 
+  workflow_run:
+    workflows: ["Task-6 - App CI (Build & Push to ECR)"]
+    types:
+      - completed
+
+concurrency:
+  group: task-6-con-group
+  cancel-in-progress: false
+
 permissions:
   id-token: write
   contents: read
 
 env:
-  AWS_REGION: ${{vars.AWS_REGION}}
-  AWS_ROLE_ARN: ${{vars.AWS_ROLE_ARN}}
-  
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  AWS_ROLE_ARN: ${{ vars.AWS_ROLE_ARN }}
+
 jobs:
   terraform:
+    if: |
+      (github.event_name == 'push') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    
     runs-on: ubuntu-latest
 
     defaults:

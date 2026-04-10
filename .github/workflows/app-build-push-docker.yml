@@ -7,6 +7,10 @@ on:
     paths:
       - 'app/**'
 
+concurrency:
+  group: task-6-con-group
+  cancel-in-progress: false
+  
 permissions:
   id-token: write
   contents: read

@@ -1,0 +1,49 @@
+name: Terraform Destroy (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type 'destroy' to confirm"
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+
+jobs:
+  terraform-destroy:
+    name: Terraform Destroy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate Confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "destroy" ]; then
+            echo "You must type 'destroy' to proceed"
+            exit 1
+          fi
+
+      - name: Clone Repository (task-6 branch)
+        run: |
+          git clone --branch task-6 https://github.com/${{ github.repository }} repo
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init -input=false
+        working-directory: repo/infra
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve
+        working-directory: repo/infra

@@ -68,6 +68,8 @@ def test_internet():
         return {"internet": "Not Working ❌"}
 
 
+
+
 def network_diagnostics():
     result = {}
 

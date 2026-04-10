@@ -11,8 +11,6 @@ locals {
 
 data "aws_caller_identity" "current" {}
 
-
-
 resource "aws_instance" "example" {
   ami                         = var.ec2_ami
   instance_type               = var.ec2_instance_type

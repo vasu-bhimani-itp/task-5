@@ -9,7 +9,6 @@ module "ec2" {
   iam_instance_profile_name = module.iam.iam_instance_profile_name
 }
 
-
 module "iam" {
   source = "./modules/iam"
 }

@@ -1,4 +1,4 @@
-name: Task-6 -App CI (Build & Push to ECR)
+name: Task-6 - App CI (Build & Push to ECR)
 
 on:
   push:
@@ -12,11 +12,10 @@ permissions:
   contents: read
 
 env:
-  AWS_REGION: ${{vars.AWS_REGION}}
-  ECR_REPOSITORY: ${{vars.ECR_REPOSITORY}}
-  AWS_ROLE_ARN: ${{vars.AWS_ROLE_ARN}}
-  
-  
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }} # FULL URL
+  AWS_ROLE_ARN: ${{ vars.AWS_ROLE_ARN }}
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -25,35 +24,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials (OIDC)
+      # 🔐 Configure AWS via OIDC
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{env.AWS_ROLE_ARN}}
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
+      # 🔐 Login to ECR
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
+      # 🏷️ Set image tag (commit SHA)
       - name: Set image tag
         run: echo "IMAGE_TAG=${GITHUB_SHA}" >> $GITHUB_ENV
 
+      # 🏗️ Build Docker image (already tagged with FULL ECR URL)
       - name: Build Docker image
         run: |
           docker build -t $ECR_REPOSITORY:${IMAGE_TAG} ./app
 
-      - name: Tag image
-        run: |
-          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          docker tag $ECR_REPOSITORY:${IMAGE_TAG} \
-          $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${IMAGE_TAG}
-
+      # 📤 Push to ECR (NO prefixing!)
       - name: Push image to ECR
         run: |
-          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          docker push \
-          $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${IMAGE_TAG}
+          docker push $ECR_REPOSITORY:${IMAGE_TAG}
 
-      - name: Deploy on EC2 via SSM (using tag)
+      # 🚀 Deploy on EC2 via SSM
+      - name: Deploy on EC2 via SSM
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
@@ -70,7 +67,7 @@ jobs:
             --comment "Deploy latest container" \
             --parameters commands="[
               \"aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com\",
-              \"docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG\",
+              \"docker pull $ECR_REPOSITORY:$IMAGE_TAG\",
               \"docker rm -f my-app || true\",
-              \"docker run -d -p 80:5000 --name my-app $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG\"
+              \"docker run -d -p 80:5000 --name my-app $ECR_REPOSITORY:$IMAGE_TAG\"
             ]"

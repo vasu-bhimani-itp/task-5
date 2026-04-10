@@ -1,4 +1,4 @@
-name: App CI (Build & Push to ECR)
+name: Task-6 -App CI (Build & Push to ECR)
 
 on:
   push:
@@ -28,7 +28,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{env.AWS_ROLE_ARN}}:role/github-oidc-role
+          role-to-assume: ${{env.AWS_ROLE_ARN}}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR

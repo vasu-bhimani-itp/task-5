@@ -1,4 +1,4 @@
-name: Infra CI (Terraform Apply)
+name: Task-6 - Infra CI (Terraform Apply)
 
 on:
   push:

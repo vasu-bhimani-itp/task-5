@@ -25,7 +25,7 @@ variable "key_pair" {
 }
 
 variable "security_group_allow_port" {
-  default = [80,5000,22]
+  default = [80, 5000, 22]
 }
 
 variable "repo_name" {

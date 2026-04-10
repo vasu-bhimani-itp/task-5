@@ -1,9 +1,9 @@
 locals {
   tag = {
-        Name = var.Name
-        Owner = var.Owner
-        Project = var.Project
-    }
+    Name    = var.Name
+    Owner   = var.Owner
+    Project = var.Project
+  }
 
   account_id = data.aws_caller_identity.current.account_id
 }
@@ -14,19 +14,19 @@ data "aws_caller_identity" "current" {}
 
 
 resource "aws_instance" "example" {
-  ami           = var.ec2_ami
-  instance_type = var.ec2_instance_type
-  subnet_id = var.public_subnet_id
+  ami                         = var.ec2_ami
+  instance_type               = var.ec2_instance_type
+  subnet_id                   = var.public_subnet_id
   associate_public_ip_address = true
-  key_name = var.key_pair
-  security_groups = [ aws_security_group.allow_tls.id ]
+  key_name                    = var.key_pair
+  security_groups             = [aws_security_group.allow_tls.id]
 
   user_data_base64 = base64encode(templatefile("${path.module}/user_data.sh.tpl", {
-  aws_region = var.aws_region
-  account_id = local.account_id
-  repo_name  = var.repo_name
+    aws_region = var.aws_region
+    account_id = local.account_id
+    repo_name  = var.repo_name
   }))
-  
+
   volume_tags = local.tag
 }
 

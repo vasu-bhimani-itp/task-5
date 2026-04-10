@@ -12,15 +12,15 @@ variable "key_pair" {
 }
 
 variable "security_group_allow_port" {
-  type = set(string)
-  default = [80,5000,22]
+  type    = set(string)
+  default = [80, 5000, 22]
 }
 
 variable "public_subnet_id" {
-  
+
 }
 variable "main_vpc_id" {
-  
+
 }
 
 

@@ -9,12 +9,12 @@ terraform {
 
 provider "aws" {
   region = var.aws_region
-  
+
   default_tags {
     tags = {
-        Owner = var.Owner
-        Name = var.Name
-        Project = var.Project
+      Owner   = var.Owner
+      Name    = var.Name
+      Project = var.Project
     }
   }
 }
